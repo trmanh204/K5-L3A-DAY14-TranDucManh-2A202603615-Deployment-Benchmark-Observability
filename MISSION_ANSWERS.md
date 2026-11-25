@@ -285,9 +285,14 @@ X-XSS-Protection: 1; mode=block
 ## Part 3: Cloud Deployment
 
 ### Exercise 3.1: Deploy Production Agent (`06-lab-complete/`) lên Railway
-- **Nền tảng chính:** Railway (deploy trực tiếp từ thư mục `06-lab-complete/` dùng `Dockerfile` + `railway.toml`, kết nối Redis trên Railway)
-- **Public URL:** *(Đang chờ hoàn tất deploy trên Railway — sẽ điền ngay sau khi Generate Domain)*
-- **Screenshots:** `screenshots/dashboard.png`, `screenshots/running.png`, `screenshots/test.png` *(chi tiết lệnh test nằm trong `DEPLOYMENT.md`)*
+- **Nền tảng chính:** Railway (deploy trực tiếp từ thư mục `06-lab-complete/` dùng `Dockerfile` + `railway.toml`, kết nối Managed Redis trên Railway)
+- **Public URL:** https://k5-l3a-day14-tranducmanh-2a202603615-deployment-production.up.railway.app
+- **Screenshots:** `screenshots/dashboard.png`, `screenshots/running.png`, `screenshots/test.png` *(chi tiết cấu hình và lệnh test trong `DEPLOYMENT.md`)*
+- **Kết quả kiểm chứng thực tế trên Public URL:**
+  - `GET /health` → `200 OK` (`{"status":"ok","environment":"production","uptime_seconds":3473.8}`)
+  - `GET /ready` → `200 OK` (`{"status":"ready","redis":"ok","environment":"production"}`)
+  - `POST /ask` không có `X-API-Key` → `401 Unauthorized`
+  - `POST /ask` có `X-API-Key` hợp lệ → `200 OK` (xem ảnh `screenshots/test.png`)
 
 ---
 
@@ -594,3 +599,12 @@ Chạy kiểm tra đầy đủ (3 lớp: kiểm tra tĩnh + runtime với Redis 
 6. **Checkpoint 5 — Part 6 (Final Project `06-lab-complete/`):**
    - **Đã hỏi AI:** Hỗ trợ thiết kế và hoàn thiện các module `app/` (`config.py`, `redis_client.py`, `auth.py`, `rate_limiter.py`, `cost_guard.py`, `main.py`) cùng `Dockerfile` multi-stage, `.dockerignore`, `docker-compose.yml`, `.env.example`, `railway.toml`, `render.yaml`.
    - **Đã nhận & tự kiểm tra:** Đã chạy nguyên bản `python check_production_ready.py` (không chỉnh sửa script chấm) trong Ubuntu WSL2 với Docker, đạt trọn vẹn **`PASS 12/12` (`43/43 checks passed`)**, image `238 MB`, `docker stop` tắt êm trong `1.0s`.
+7. **Checkpoint 6 — Part 3 & Cloud Deployment (Railway):**
+   - **Đã hỏi AI:** Hướng dẫn từng bước cấu hình Railway Web Dashboard (GitHub App, Root Directory `06-lab-complete`, thêm Redis, cấu hình Variables, xử lý khớp cổng `8080` do Railway inject), kiểm chứng endpoint public, và hoàn thiện `DEPLOYMENT.md` cùng phần so sánh Railway/Render/Cloud Run.
+   - **Đã nhận & tự kiểm tra:** Đã tự thao tác deploy trên tài khoản Railway cá nhân, đặt `AGENT_API_KEY` trực tiếp trên dashboard (không commit vào Git), xác nhận `/health` → `200`, `/ready` → `200` (Redis online), `/ask` không key → `401`, có key → `200`.
+8. **Checkpoint 7 — Part 7 Bước 1 (Benchmark hiệu năng & chất lượng local):**
+   - **Đã hỏi AI:** Hỗ trợ bổ sung metric `agent_question_length_chars`, chạy 7 bài load test (4 concurrency + 3 slow rate) và eval v1/v2, bổ sung 2 entry thiếu vào `KNOWLEDGE_BASE`, tạo CI workflow `.github/workflows/eval.yml` và điền mục 1–3 của `BENCHMARK_REPORT.md`.
+   - **Đã nhận & tự kiểm tra:** Toàn bộ số liệu trong `BENCHMARK_REPORT.md` đều trích khớp 100% với 10 file JSON trong `reports/`, `golden_dataset.jsonl` giữ nguyên không chỉnh sửa, lệnh eval cuối đạt `23/23 (100.0%)` không regression (`✅ PASS`).
+9. **Checkpoint 8 — Part 7 Bước 2 (Observability stack, Tracing, Alerts & Đóng gói nộp bài):**
+   - **Đã hỏi AI:** Hỗ trợ chẩn đoán và sửa lỗi thiếu `PYTHONUSERBASE` trong `production/Dockerfile`, chạy unit test `promtool`, benchmark Locust headless `scale=1` vs `scale=3`, trích xuất trace chậm/lỗi từ Jaeger kèm dòng log JSON khớp `trace_id`, chạy thí nghiệm Chaos kích hoạt đồng thời 4 alert `FIRING` và hoàn thiện `BENCHMARK_REPORT.md`.
+   - **Đã nhận & tự kiểm tra:** Tự mở Grafana, Jaeger và Prometheus trên trình duyệt để quan sát và chụp đủ 4 ảnh bằng chứng thật; đối chiếu toàn bộ số liệu báo cáo khớp 100% với `scale_1_stats.csv` và `scale_3_stats.csv`; dọn sạch Docker stack và kiểm tra không có `.env` hay secret trong repo/lịch sử git.

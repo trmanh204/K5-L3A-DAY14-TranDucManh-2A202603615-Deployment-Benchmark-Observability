@@ -1,0 +1,32 @@
+name: agent-eval-quality-gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies and run eval quality gate
+        working-directory: 06-lab-complete/benchmark-observability/develop
+        run: |
+          pip install -r requirements.txt
+          AGENT_VERSION=v2 MOCK_ERROR_RATE=0 python app.py &
+          SERVER_PID=$!
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8000/health >/dev/null && break
+            sleep 0.5
+          done
+          python eval/run_eval.py --url http://localhost:8000 --min-accuracy 0.85
+          STATUS=$?
+          kill $SERVER_PID 2>/dev/null || true
+          exit $STATUS
